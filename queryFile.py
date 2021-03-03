@@ -16,7 +16,7 @@ nhterm = Namespace("https://newshunter.uib.no/term#")
 g.bind("nh", nh)
 g.bind("nhterm", nhterm)
 
-# Query for å hente ut DateTime 
+# Query for å hente ut DateTime
 DateTime = g.query("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
     SELECT ?b ?c
@@ -30,13 +30,9 @@ DateTime = g.query("""
 
 ann = g.query("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
-    WHERE
-    {
-       nh:040f153c-136e-4dbe-99c7-7cde19e27c6b ?b ?c;
-       nhterm:sourceDateTime ?c
-
-    }
+    SELECT ?subject ?predicate ?object
+    WHERE {?subject ?predicate ?object} 
+    LIMIT 10
 """)
 
 
