@@ -6,7 +6,7 @@ import owlrl
 g = Graph()
 
 # Parse grafen og laste den inn i g
-g=g.parse(location="dataset_36.ttl", format="turtle")
+g=g.parse(location="dataset_36.txt", format="turtle")
 
 # Lage namespace
 nh = Namespace("https://newshunter.uib.no/resource#")
@@ -22,9 +22,9 @@ DateTime = g.query("""
     SELECT ?b ?c
     WHERE
     {
-       nh:040f153c-136e-4dbe-99c7-7cde19e27c6b ?b ?c;
+       ?b
        nhterm:sourceDateTime ?c
-       
+
     }
 """)
 
@@ -39,8 +39,8 @@ ann = g.query("""
 for row in DateTime:
     print("%s knows %s" % row)
 
-#for row in ann:
- #   print("%s knows %s" % row)
+for row in ann:
+    print("%s knows %s" % row)
 
 rdfs = owlrl.RDFSClosure.RDFS_Semantics(g, False, False, False)
 rdfs.closure()
