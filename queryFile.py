@@ -22,9 +22,9 @@ DateTime = g.query("""
     SELECT ?b ?c
     WHERE
     {
-       nh:040f153c-136e-4dbe-99c7-7cde19e27c6b ?b ?c;
+       ?b
        nhterm:sourceDateTime ?c
-       
+
     }
 """)
 
