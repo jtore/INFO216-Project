@@ -4,10 +4,14 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 nh:013e229b-644a-4fa9-be1d-b8961f5e2f9c a nhterm:Item ;
-    nhterm:hasAnnotation [ a nhterm:Annotation ;
+    nhterm:hasAnnotation 
+
+    [ a nhterm:Annotation ;
             nhterm:anchorOf "Coronavirus"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Coronavirus> ] ;
+            nhterm:hasEntity <http://dbpedia.org/resource/Coronavirus> 
+    ] ;
+
     nhterm:hasContributor <https://newshunter.uib.no/resource/unresolved#https%3A//twitter.com/i/user/7587032> ;
     nhterm:inCollection <https://www.wikidata.org/entity/Q918> ;
     nhterm:originalText "Coronavirus deaths: More than one million have now died worldwide https://t.co/w98Tl3wuqt"^^xsd:string ;
@@ -15,14 +19,21 @@ nh:013e229b-644a-4fa9-be1d-b8961f5e2f9c a nhterm:Item ;
     nhterm:sourceIRL "https://twitter.com/i/status/1310747766067527686"^^xsd:anyURI .
 
 nh:040f153c-136e-4dbe-99c7-7cde19e27c6b a nhterm:Item ;
-    nhterm:hasAnnotation [ a nhterm:Annotation ;
+    nhterm:hasAnnotation 
+    
+    [ a nhterm:Annotation ;
             nhterm:anchorOf "pandemic"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Pandemic> ],
+            nhterm:hasEntity <http://dbpedia.org/resource/Pandemic> 
+    ],
+        
+        
         [ a nhterm:Annotation ;
             nhterm:anchorOf "coronavirus"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Coronavirus> ] ;
+            nhterm:hasEntity <http://dbpedia.org/resource/Coronavirus> 
+        ] ;
+        
     nhterm:hasContributor <https://newshunter.uib.no/resource/unresolved#https%3A//twitter.com/i/user/14511951> ;
     nhterm:inCollection <https://www.wikidata.org/entity/Q918> ;
     nhterm:originalText "Stay up to date as we cover the ongoing coronavirus pandemic and its effects across the world. https://t.co/CWbaDDJmwf"^^xsd:string ;
@@ -39,6 +50,7 @@ nh:063eb874-d6e0-49bf-84a4-e79af9d56ac5 a nhterm:Item ;
     nhterm:originalText "Traveling through space for months \"is the ultimate quarantine.\" https://t.co/PP1pUebSuo"^^xsd:string ;
     nhterm:sourceDateTime "2020-09-29T01:09:06+00:00"^^xsd:dateTime ;
     nhterm:sourceIRL "https://twitter.com/i/status/1310748401479409665"^^xsd:anyURI .
+
 
 nh:07712c0d-802c-4ef4-bb95-0a0758e15277 a nhterm:Item ;
     nhterm:hasAnnotation [ a nhterm:Annotation ;
