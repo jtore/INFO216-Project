@@ -2,50 +2,63 @@ from rdflib import Graph, Namespace
 
 import owlrl
 
-# Lager grafen
-g = Graph()
+from SPARQLWrapper import SPARQLWrapper, JSON
 
-# Parse grafen og laste den inn i g
-g=g.parse(location="dataset_36.txt", format="turtle")
+# This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
+# You also need to add "sparql" to end of the URL like below.
 
-# Lage namespace
-nh = Namespace("https://newshunter.uib.no/resource#")
-nhterm = Namespace("https://newshunter.uib.no/term#")
+sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
-# Binder namespace
-g.bind("nh", nh)
-g.bind("nhterm", nhterm)
 
 # Query for å hente ut DateTime
-DateTime = g.query("""
+sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
     SELECT ?b ?c
     WHERE
     {
        ?b
        nhterm:sourceDateTime ?c
-
+       
     }
 """)
 
-ann = g.query("""
+sparql.setReturnFormat(JSON)
+DateTime = sparql.query().convert()
+
+#for result in DateTime["results"]["bindings"]:
+    #print(result["b"]["value"], "knows", result["c"]["value"])
+
+
+sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
+    
     SELECT ?subject ?predicate ?object
-    WHERE {?subject ?predicate ?object} 
+    WHERE {?subject ?predicate ?object}
+    """)
+
+sparql.setReturnFormat(JSON)
+all_triples = sparql.query().convert()
+
+#for result in all_triples["results"]["bindings"]:
+ #   print(result["subject"]["value"], result["predicate"]["value"], result["object"]["value"])
+
+
+sparql.setQuery("""
+    PREFIX nhterm: <https://newshunter.uib.no/term#>
+    SELECT ?b ?c
+    WHERE
+    {
+        ?b
+        nhterm:sourceIRL ?c
+    }
     LIMIT 10
 """)
 
+sparql.setReturnFormat(JSON)
+sourceIRL = sparql.query().convert()
 
-for row in DateTime:
-    print("%s knows %s" % row)
-
-for row in ann:
-    print("%s knows %s" % row)
-
-rdfs = owlrl.RDFSClosure.RDFS_Semantics(g, False, False, False)
-rdfs.closure()
-rdfs.flush_stored_triples()
-
+for result in sourceIRL["results"]["bindings"]:
+    print(result["b"]["value"], result["c"]["value"])
 
 
 
