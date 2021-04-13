@@ -4,27 +4,55 @@ from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
 
 import owlrl
 
-nh = Namespace("https://newshunter.uib.no/resource")
-nhterm = Namespace("https://newshunter.uib.no/term#")
-
-print("Program start, please select search condition:")
-
-
-def program_init(search_option,):
-
-    if search_option == "a":
-        search_anchorof = str(input("Input the anchor you want to search for (string values only): "))
-    if search_option == "an":
-        search_anotator = input("Input the resource for the annotator you want to search for. Format: (<https://yourresource.domain/>): ")
-    if search_option == "en":
-        search_entity = input("Input the resource for the enitity you want to search for. Format: (<http://yourresource.domain/>)")
-
-
 g = Graph()
 
-g.add((nhterm.hasAnnotation, RDF.type, nhterm.Annotation))
+# Bind prefix and namespace
+nh = Namespace("https://newshunter.uib.no/resource")
+g.bind("nh", nh)
 
-print(g.serialize(format="ttl").decode("utf-8"))
+nhterm = Namespace("https://newshunter.uib.no/term#")
+g.bind("nhterm", nhterm)
+
+bn = BNode()
+
+wikidata_dbpedia = URIRef("https://www.wikidata.org/wiki/Q276902")
+dbpedia = URIRef("http://dbpedia.org/resource/")
+newshunter_resource = ("https://newshunter.uib.no/resource/unresolved#")
+
+
+def build_graph():
+
+    print("Program start, please select search condition:")
+
+    anchorof_value = input("Input anchorOf value for your graph: ")
+    hasentity_value = input("Input entity value of graph: ")
+
+    # Item
+    g.add((nh.ID, RDF.type, nhterm.Item))
+    g.add((nh.ID, nhterm.sourceDateTime, Literal("0001-01-01T00:00:00+00:00", datatype=XSD.dateTime)))
+
+    # Annotation
+    g.add((nhterm.hasAnnotation, RDF.type, bn))
+    g.add((bn, RDF.type, nhterm.Annotation))
+    g.add((bn, nhterm.anchorOf, Literal(anchorof_value, datatype=XSD.string)))
+    g.add((bn, nhterm.hasAnnotator, wikidata_dbpedia))
+    g.add((bn, nhterm.hasEntity, dbpedia + hasentity_value))
+
+    # Contributor
+    #g.add(())
+
+
+    # if search_option == "a":
+      #  search_anchorof = str(input("Input the anchor you want to search for (string values only): "))
+    # if search_option == "an":
+       # search_anotator = input("Input the resource for the annotator you want to search for. Format: (<https://yourresource.domain/>): ")
+    # if search_option == "en":
+     #   search_entity = input("Input the resource for the enitity you want to search for. Format: (<http://yourresource.domain/>)")
+
+    print(g.serialize(format="ttl").decode("utf-8"))
+
+
+build_graph()
 
 
 from SPARQLWrapper import SPARQLWrapper, JSON
