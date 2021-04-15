@@ -1,6 +1,6 @@
 from rdflib import Graph, Namespace, BNode, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import SPARQLWrapper, JSON, N3, RDFXML
 
 import owlrl
 
@@ -90,15 +90,15 @@ DateTime = sparql.query().convert()
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
     
-    SELECT ?subject ?predicate ?object
-    WHERE {?subject ?predicate ?object}
+    SELECT  ?object
+    WHERE {?subject nhterm:sourceIRL ?object  }
     """)
 
 sparql.setReturnFormat(JSON)
 all_triples = sparql.query().convert()
 
 #for result in all_triples["results"]["bindings"]:
- #   print(result["subject"]["value"], result["predicate"]["value"], result["object"]["value"])
+ #   print(result["object"]["value"])
 
 
 sparql.setQuery("""
@@ -129,38 +129,25 @@ anchorof_value = "Tesla"
 sparql.setQuery(
     """
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?item ?annotation WHERE {
+    SELECT ?item WHERE {
         ?item nhterm:hasAnnotation ?annotation .
         ?annotation nhterm:anchorOf ?anchorvalue .
-        
         FILTER(STR(?anchorvalue) = "%s")
     }
     """
 %anchorof_value)
 
 sparql.setReturnFormat(JSON)
-test = sparql.query().convert()
-for result in test["results"]["bindings"]:
-    print(result["item"]["value"])
+#results = sparql.query().convert()
+#for result in results["results"]["bindings"]:
+    #print(result["item"]["value"])
 
+sparql.setQuery("""
+     DESCRIBE <https://newshunter.uib.no/resource#3ab2b3e9-f55a-4b37-8b9b-9ad8ef0f2753>
+""")
 
-# Funker ikke, men er en begynnelse
-
-'''
-for result in test["results"]["bindings"]:
-    res = result["item"]["value"]
-    sparql.setQuery(
-        """
-        PREFIX nhterm: <https://newshunter.uib.no/term#>
-        SELECT nhterm:hasAnnotation WHERE {
-            ?item nhterm:hasAnnotation ?annotation .
-            FILTER(STR(?item) = "%s")
-        }
-        """
-        %res)
-    sparql.setReturnFormat(JSON)
-    test2 = sparql.query().convert()
-
-    for result2 in test2["results"]["bindings"]:
-        print(result2["results"]["item"])
-'''
+sparql.setReturnFormat(RDFXML)
+results = sparql.query().convert()
+g = Graph()
+g.parse(data=results, format=RDFXML)
+print(g.serialize(format="RDFXML"))

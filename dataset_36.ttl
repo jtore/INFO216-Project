@@ -1171,7 +1171,7 @@ nh:51c316ee-f177-4c8e-970d-9dd286eb0c26 a nhterm:Item ;
     nhterm:hasAnnotation [ a nhterm:Annotation ;
             nhterm:anchorOf "Russian"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Russian_Armed_Forces> ],
+            nhterm:hasEntity <http://dbpedia.org/resource/Russian_ARrmed_Forces> ],
         [ a nhterm:Annotation ;
             nhterm:anchorOf "Ukrainian"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
