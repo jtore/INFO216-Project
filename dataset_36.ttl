@@ -1575,7 +1575,7 @@ nh:7c1e3a5d-ea86-42af-9ad2-a7b30f247418 a nhterm:Item ;
             nhterm:anchorOf "church"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
             nhterm:hasEntity <http://dbpedia.org/resource/Catholic_Church> ],
-        [ a nhterm:Annotation ;
+        [ a nhterm:Annotation
             nhterm:anchorOf "detective"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
             nhterm:hasEntity <http://dbpedia.org/resource/Police_officer> ],

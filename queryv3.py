@@ -137,13 +137,13 @@ sourceDateTime = sparql.query().convert()
 
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT  ?b ?c ?g
+    SELECT  ?item ?c ?type_or_term
     WHERE
     {
-        ?b
-        ?g
-        ?c
-        FILTER(?g != nhterm:sourceIRL)
+        ?item
+        ?type_or_term
+        ?val
+        FILTER(?type_or_term != nhterm:sourceIRL)
     }
 """)
 
@@ -163,15 +163,11 @@ bn = BNode()
 
 #-------------------------Results---------------------------------#
 
-
-#for result in sourceIRL["results"]["bindings"]:
-  #  print(result["b"]["value"], result["c"]["value"])
-
 for result in sourceIRL["results"]["bindings"]:
-    g.add((URIRef(result["b"]["value"]),nhterm.sourceIRL, URIRef(result["c"]["value"])))
+    print(result["val"]["value"])
+    # g.add((URIRef(result["b"]["value"]), nhterm.sourceIRL, URIRef(result["c"]["value"])))
 
 print(g.serialize(format="ttl").decode("utf-8"))
-
 
 
 #for result in all_triples["results"]["bindings"]:    print(result["predicate"]["value"], result["object"]["value"])
