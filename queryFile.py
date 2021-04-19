@@ -62,8 +62,6 @@ build_graph()
 
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
 # You also need to add "sparql" to end of the URL like below.
-
-
 sparql = SPARQLWrapper("http://192.168.0.76:9999/blazegraph/sparql")
 
 
@@ -142,12 +140,21 @@ sparql.setReturnFormat(JSON)
 #for result in results["results"]["bindings"]:
     #print(result["item"]["value"])
 
+
+
+# Describe Query
+
 sparql.setQuery("""
      DESCRIBE <https://newshunter.uib.no/resource#3ab2b3e9-f55a-4b37-8b9b-9ad8ef0f2753>
 """)
 
 sparql.setReturnFormat(RDFXML)
-results = sparql.query().convert()
+
+res = sparql.queryAndConvert()
+graph_str = res.serialize(format="ttl").decode("utf-8")
+
 g = Graph()
-g.parse(data=results, format=RDFXML)
-print(g.serialize(format="RDFXML"))
+g.parse(data=graph_str, format="ttl")
+print(graph_str)
+
+# java -server -Xmx4g -jar blazegraph.jar
