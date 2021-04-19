@@ -17,11 +17,11 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?anc
     WHERE
     {
-       ?b
-       nhterm:anchorOf ?c
+       ?pred
+       nhterm:anchorOf ?anc
 
     }
 """)
@@ -31,11 +31,11 @@ anchorOf = sparql.query().convert()
 #-----------------hasAnnotator----------
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?hasann
     WHERE
     {
-       ?b
-       nhterm:hasAnnotator ?c
+       ?pred
+       nhterm:hasAnnotator ?hasann
     
     }
     LIMIT 1
@@ -48,11 +48,11 @@ hasAnnotator = sparql.query().convert()
 
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?hasent
     WHERE
     {
-       ?b
-       nhterm:hasEntity ?c
+       ?pred
+       nhterm:hasEntity ?hasent
 
     }
 """)
@@ -62,39 +62,26 @@ hasEntity = sparql.query().convert()
 #-----------------hasContributor----------
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?hascont
     WHERE
     {
-       ?b
-       nhterm:hasContributor ?c
+       ?pred
+       nhterm:hasContributor ?hascont
 
     }
 """)
 sparql.setReturnFormat(JSON)
 hasContributor = sparql.query().convert()
 
-# -----------------originalText----------
 
-sparql.setQuery("""
-    PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
-    WHERE
-    {
-       ?b
-       nhterm:originalText ?c
-
-    }
-""")
-sparql.setReturnFormat(JSON)
-originalText = sparql.query().convert()
 #-----------------inCollection----------
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?incol
     WHERE
     {
-       ?b
-       nhterm:inCollection ?c
+       ?pred
+       nhterm:inCollection ?incol
 
     }
 """)
@@ -106,11 +93,11 @@ inCollection = sparql.query().convert()
 
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?pred ?orig
     WHERE
     {
-        ?b
-        nhterm:originalText ?c
+        ?pred
+        nhterm:originalText ?orig
     }
     
 """)
@@ -121,7 +108,7 @@ originalText = sparql.query().convert()
 #-----------------SourceDateTime----------
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c
+    SELECT ?b ?c ?g
     WHERE
     {
        ?b
@@ -137,13 +124,13 @@ sourceDateTime = sparql.query().convert()
 
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT  ?item ?c ?type_or_term
+    SELECT  ?sub ?pred ?irl
     WHERE
     {
-        ?item
-        ?type_or_term
-        ?val
-        FILTER(?type_or_term != nhterm:sourceIRL)
+        ?sub
+        ?irl
+        ?pred
+        FILTER(?irl != nhterm:sourceIRL)
     }
 """)
 
@@ -163,11 +150,15 @@ bn = BNode()
 
 #-------------------------Results---------------------------------#
 
+
+#for result in sourceIRL["results"]["bindings"]:
+  #  print(result["b"]["value"], result["c"]["value"])
+
 for result in sourceIRL["results"]["bindings"]:
-    print(result["val"]["value"])
-    # g.add((URIRef(result["b"]["value"]), nhterm.sourceIRL, URIRef(result["c"]["value"])))
+    g.add((URIRef(result["sub"]["value"]), nhterm.sourceIRL, Literal(result["pred"]["value"])))
 
 print(g.serialize(format="ttl").decode("utf-8"))
+
 
 
 #for result in all_triples["results"]["bindings"]:    print(result["predicate"]["value"], result["object"]["value"])
