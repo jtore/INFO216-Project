@@ -142,7 +142,7 @@ sparql.setReturnFormat(JSON)
 
 
 
-# Describe Query
+# DESCRIBE QUERY
 
 sparql.setQuery("""
      DESCRIBE <https://newshunter.uib.no/resource#3ab2b3e9-f55a-4b37-8b9b-9ad8ef0f2753>
@@ -154,7 +154,7 @@ res = sparql.queryAndConvert()
 graph_str = res.serialize(format="ttl").decode("utf-8")
 
 g = Graph()
-g.parse(data=graph_str, format="ttl")
-print(graph_str)
+#g.parse(data=graph_str, format="ttl")
+#print(graph_str)
 
 # java -server -Xmx4g -jar blazegraph.jar

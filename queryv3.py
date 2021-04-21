@@ -2,7 +2,7 @@ from rdflib import Graph, Namespace, BNode, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
 import owlrl
 
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
 # You also need to add "sparql" to end of the URL like below.
@@ -137,6 +137,49 @@ sparql.setQuery("""
 sparql.setReturnFormat(JSON)
 sourceIRL = sparql.query().convert()
 
+
+
+# ----- AnchorOf Query ------
+
+# Query for å finne et nhterm:Item basert på en verdi i anchorOf inne i det itemet.
+
+anchorof_value = "Tesla"
+
+sparql.setQuery(
+    """
+    PREFIX nhterm: <https://newshunter.uib.no/term#>
+    SELECT ?item WHERE {
+        ?item nhterm:hasAnnotation ?annotation .
+        ?annotation nhterm:anchorOf ?anchorvalue .
+        FILTER(STR(?anchorvalue) = "%s")
+    }
+    """
+%anchorof_value)
+
+sparql.setReturnFormat(JSON)
+results = sparql.query().convert()
+for result in results["results"]["bindings"]:
+    return_value = result["item"]["value"]
+
+
+
+# ---------- DESCRIBE QUERY ----------
+
+sparql.setQuery("""
+       DESCRIBE ?item WHERE{
+          ?item ?annotation ?annotation
+          FILTER(STR(?item) = "%s")
+       }
+  """)
+sparql.setReturnFormat(RDFXML)
+
+res = sparql.queryAndConvert()
+graph_str = res.serialize(format="ttl").decode("utf-8")
+
+#g = Graph()
+#g.parse(data=graph_str, format="ttl")
+#print(graph_str)
+
 #------------------Graph-------------------
 
 
@@ -150,18 +193,9 @@ bn = BNode()
 
 #-------------------------Results---------------------------------#
 
-
-#for result in sourceIRL["results"]["bindings"]:
-  #  print(result["b"]["value"], result["c"]["value"])
-
 for result in sourceIRL["results"]["bindings"]:
     g.add((URIRef(result["sub"]["value"]), nhterm.sourceIRL, Literal(result["pred"]["value"])))
 
 print(g.serialize(format="ttl").decode("utf-8"))
 
-
-
-#for result in all_triples["results"]["bindings"]:    print(result["predicate"]["value"], result["object"]["value"])
-
-#for result in all_triples["results"]["bindings"]:
-#    print(result["object"]["value"])
+# java -server -Xmx4g -jar blazegraph.jar
