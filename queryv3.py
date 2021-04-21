@@ -9,30 +9,65 @@ from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
+# java -server -Xmx4g -jar blazegraph.jar
+
 #anchorof_value = input("Input anchorOf value for your graph: ")
 
 #-------------Queries------------#
+# superAnnotation = a nhterm:Annotation
+# p1 = nhterm: variable annotation (ex. anchorOf)
+# o1 = verdien inne i annotation
+
 
 sparql.setQuery("""
+PREFIX nhterm: <https://newshunter.uib.no/term#>
+SELECT ?item1 ?item2 WHERE {
+  
+    ?item1 a nhterm:Item ;
+    nhterm:hasAnnotation ?superAnnotation1 ;
+    ?variableAnnotation1 ?valueOfAnnotation1 .
+    ?superAnnotation1 nhterm:anchorOf ?anc . 
+    
+    ?item2 a nhterm:Item ;
+    nhterm:hasAnnotation ?superAnnotation2 ;
+    ?variableAnnotation2 ?valueOfAnnotation2 .
+    ?superAnnotation2 nhterm:anchorOf ?anc . 
+    
+    ?annotation1 ?ap1 ?ao1 .
+    ?annotation2 ?ap2 ?ao2 .
+    FILTER(?item1 != ?item2)
+    FILTER(STR(?anc) = "Trump")
+    }	
+    LIMIT 50
+""")
+
+'''
+sparql.setQuery("""
+PREFIX nhterm: <https://newshunter.uib.no/term#>
 SELECT * WHERE {
     ?item1 a nhterm:Item ;
-    hasAnnotation ?annotation1 ;
-    ?p1 ?o1 .
-    ?annotation1 nhterm:hasEntity ?entity .
+    nhterm:hasAnnotation ?superAnnotation1 ;
+    ?variableAnnotation1 ?valueOfAnnotation1 .
+    ?superAnnotation1 nhterm:hasEntity ?entity .
+    
     ?item2 a nhterm:Item ;
-    hasAnnotation ?annotation2 .
-    ?p2 ?o2 .
-    ?annotation2 nhterm:hasEntity ?entity .
-    ?annotation1 ?ap1 ?ao1
-    ?annotation2 ?ap2 ?ao2
-}
+    nhterm:hasAnnotation ?superAnnotation2 ;
+    ?variableAnnotation2 ?valueOfAnnotation2 .
+    ?superAnnotation2 nhterm:hasEntity ?entity .
+    
+    ?annotation1 ?ap1 ?ao1 .
+    ?annotation2 ?ap2 ?ao2 .
+    }
+    LIMIT 10
 """)
+'''
+
 sparql.setReturnFormat(JSON)
-test = sparql.query().convert()
+res = sparql.query().convert()
 
-
-for result in test["results"]["bindings"]:
-    print(result["object"]["value"])
+for result in res["results"]["bindings"]:
+    print(result)
+    
 
 #-----------------AnchorOf----------
 
@@ -179,8 +214,8 @@ sparql.setQuery(
 
 sparql.setReturnFormat(JSON)
 results = sparql.query().convert()
-for result in results["results"]["bindings"]:
-    return_value = result["item"]["value"]
+#for result in results["results"]["bindings"]:
+ #   return_value = result["item"]["value"]
 
 
 
@@ -214,8 +249,8 @@ bn = BNode()
 
 #-------------------------Results---------------------------------#
 
-for result in sourceIRL["results"]["bindings"]:
-    g.add((URIRef(result["sub"]["value"]), nhterm.sourceIRL, Literal(result["pred"]["value"])))
+#for result in sourceIRL["results"]["bindings"]:
+ #   g.add((URIRef(result["sub"]["value"]), nhterm.sourceIRL, Literal(result["pred"]["value"])))
 
 print(g.serialize(format="ttl").decode("utf-8"))
 
