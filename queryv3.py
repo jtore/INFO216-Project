@@ -13,6 +13,27 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 #-------------Queries------------#
 
+sparql.setQuery("""
+SELECT * WHERE {
+    ?item1 a nhterm:Item ;
+    hasAnnotation ?annotation1 ;
+    ?p1 ?o1 .
+    ?annotation1 nhterm:hasEntity ?entity .
+    ?item2 a nhterm:Item ;
+    hasAnnotation ?annotation2 .
+    ?p2 ?o2 .
+    ?annotation2 nhterm:hasEntity ?entity .
+    ?annotation1 ?ap1 ?ao1
+    ?annotation2 ?ap2 ?ao2
+}
+""")
+sparql.setReturnFormat(JSON)
+test = sparql.query().convert()
+
+
+for result in test["results"]["bindings"]:
+    print(result["object"]["value"])
+
 #-----------------AnchorOf----------
 
 sparql.setQuery("""
