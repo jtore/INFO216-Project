@@ -15,28 +15,25 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 #-------------Queries------------#
 # superAnnotation = a nhterm:Annotation
-# p1 = nhterm: variable annotation (ex. anchorOf)
+# variableAnnotation = (ex. anchorOf)
 # o1 = verdien inne i annotation
 
 
 sparql.setQuery("""
 PREFIX nhterm: <https://newshunter.uib.no/term#>
-SELECT ?item1 ?item2 WHERE {
+SELECT DISTINCT ?item1 ?item2 WHERE {
   
     ?item1 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation1 ;
-    ?variableAnnotation1 ?valueOfAnnotation1 .
-    ?superAnnotation1 nhterm:anchorOf ?anc . 
+    nhterm:hasAnnotation ?superAnnotation1 .
+    ?superAnnotation1 nhterm:anchorOf ?anc .
     
     ?item2 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation2 ;
-    ?variableAnnotation2 ?valueOfAnnotation2 .
+    nhterm:hasAnnotation ?superAnnotation2 . 
     ?superAnnotation2 nhterm:anchorOf ?anc . 
     
-    ?annotation1 ?ap1 ?ao1 .
-    ?annotation2 ?ap2 ?ao2 .
     FILTER(?item1 != ?item2)
-    FILTER(STR(?anc) = "Trump")
+	FILTER(STR(?anc) = "Trump")
+
     }	
     LIMIT 50
 """)
@@ -65,8 +62,8 @@ SELECT * WHERE {
 sparql.setReturnFormat(JSON)
 res = sparql.query().convert()
 
-for result in res["results"]["bindings"]:
-    print(result)
+#for result in res["results"]["bindings"]:
+ #   print(result)
     
 
 #-----------------AnchorOf----------
@@ -161,20 +158,21 @@ sparql.setQuery("""
 sparql.setReturnFormat(JSON)
 originalText = sparql.query().convert()
 
-#-----------------SourceDateTime----------
+# -----------------SourceDateTime----------
 sparql.setQuery("""
-    PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?b ?c ?g
+    PREFIX nhterm: https://newshunter.uib.no/term#
+    SELECT ?s ?p ?o
     WHERE
     {
-       ?b
-       ?g ?c
-       FILTER(?g != %s)
-
+       ?s a nhterm:Item .
+        nhterm:sourceDateTime ?o .
     }
-""" %"nhterm:sourceDateTime")
+""")
 sparql.setReturnFormat(JSON)
 sourceDateTime = sparql.query().convert()
+
+for result in sourceDateTime["results"]["bindings"]:
+    print(result)
 
 #------------------SourceIRL--------------
 
@@ -247,11 +245,13 @@ nhterm = Namespace("https://newshunter.uib.no/term#")
 g.bind("nhterm", nhterm)
 bn = BNode()
 
+
 #-------------------------Results---------------------------------#
+
+
 
 #for result in sourceIRL["results"]["bindings"]:
  #   g.add((URIRef(result["sub"]["value"]), nhterm.sourceIRL, Literal(result["pred"]["value"])))
 
-print(g.serialize(format="ttl").decode("utf-8"))
 
 # java -server -Xmx4g -jar blazegraph.jar

@@ -80,8 +80,8 @@ sparql.setQuery("""
 sparql.setReturnFormat(JSON)
 DateTime = sparql.query().convert()
 
-#for result in DateTime["results"]["bindings"]:
-    #print(result["b"]["value"], "knows", result["c"]["value"])
+for result in DateTime["results"]["bindings"]:
+    print(result["b"]["value"], "knows", result["c"]["value"])
 
 
 # Query for alle tripler
