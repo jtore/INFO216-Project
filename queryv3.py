@@ -33,31 +33,10 @@ SELECT DISTINCT ?item1 ?item2 WHERE {
     
     FILTER(?item1 != ?item2)
 	FILTER(STR(?anc) = "Trump")
-
     }	
+    
     LIMIT 50
 """)
-
-'''
-sparql.setQuery("""
-PREFIX nhterm: <https://newshunter.uib.no/term#>
-SELECT * WHERE {
-    ?item1 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation1 ;
-    ?variableAnnotation1 ?valueOfAnnotation1 .
-    ?superAnnotation1 nhterm:hasEntity ?entity .
-    
-    ?item2 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation2 ;
-    ?variableAnnotation2 ?valueOfAnnotation2 .
-    ?superAnnotation2 nhterm:hasEntity ?entity .
-    
-    ?annotation1 ?ap1 ?ao1 .
-    ?annotation2 ?ap2 ?ao2 .
-    }
-    LIMIT 10
-""")
-'''
 
 sparql.setReturnFormat(JSON)
 res = sparql.query().convert()
@@ -169,10 +148,10 @@ sparql.setQuery("""
     }
 """)
 sparql.setReturnFormat(JSON)
-sourceDateTime = sparql.query().convert()
+#sourceDateTime = sparql.query().convert()
 
-for result in sourceDateTime["results"]["bindings"]:
-    print(result)
+#for result in sourceDateTime["results"]["bindings"]:
+ #   print(result)
 
 #------------------SourceIRL--------------
 
@@ -215,7 +194,41 @@ results = sparql.query().convert()
 #for result in results["results"]["bindings"]:
  #   return_value = result["item"]["value"]
 
+sparql.setQuery("""
+   
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX nhterm: <https://newshunter.uib.no/term#>
+    SELECT ?item ?dt ?year ?month ?day ?hours ?minutes 
+    WHERE
+    {
+          ?item a nhterm:Item ;
+        nhterm:sourceDateTime ?dt
+        bind(year(?dt) as ?year)
+        bind(month(?dt) as ?month)
+        bind(day(?dt) as ?day)
+        bind(hours(?dt) as ?hours)
+        bind(minutes(?dt) as ?minutes)
+    }
+        ORDER BY ?year ?month ?day ?hours ?minutes
+        LIMIT 1
 
+
+""")
+
+time_results = sparql.query().convert()
+for result in time_results["results"]["bindings"]:
+    item = result["item"]["value"]
+    sparql.setQuery("""
+           DESCRIBE ?item WHERE{
+              ?item ?annotation ?annotation
+              FILTER(STR(?item) = "%s")
+           }
+      """%item)
+    sparql.setReturnFormat(RDFXML)
+
+    res = sparql.queryAndConvert()
+    graph_str = res.serialize(format="ttl").decode("utf-8")
+    print(graph_str)
 
 # ---------- DESCRIBE QUERY ----------
 
