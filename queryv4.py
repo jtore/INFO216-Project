@@ -93,3 +93,4 @@ for result in time_results["results"]["bindings"]:
     print(graph_str)
 
 # Starte Blazegraph server:  java -server -Xmx4g -jar blazegraph.jar
+

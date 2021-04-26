@@ -16,7 +16,6 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 #-------------Queries------------#
 # superAnnotation = a nhterm:Annotation
 # variableAnnotation = (ex. anchorOf)
-# o1 = verdien inne i annotation
 
 
 sparql.setQuery("""
@@ -59,6 +58,7 @@ sparql.setQuery("""
 """)
 sparql.setReturnFormat(JSON)
 anchorOf = sparql.query().convert()
+
 
 #-----------------hasAnnotator----------
 sparql.setQuery("""
@@ -242,10 +242,9 @@ sparql.setReturnFormat(RDFXML)
 
 res = sparql.queryAndConvert()
 graph_str = res.serialize(format="ttl").decode("utf-8")
+g = Graph()
+g.parse(data=graph_str, format="ttl")
 
-#g = Graph()
-#g.parse(data=graph_str, format="ttl")
-#print(graph_str)
 
 #------------------Graph-------------------
 

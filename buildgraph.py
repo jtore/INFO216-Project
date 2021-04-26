@@ -1,16 +1,34 @@
 from rdflib import Graph, Namespace, BNode, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
+import random
+import string
+from random import randint
+
+
+def generate_hash():
+    start_sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(8))
+
+    _2sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
+    _3sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
+    _4sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
+
+    end_sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(12))
+
+    _hash = start_sect + "-" + _2sect + "-" + _3sect + "-" + _4sect + "-" + end_sect
+    return _hash
+
 
 g = Graph()
 # Bind prefix and namespace
-nh = Namespace("https://newshunter.uib.no/resource")
+nh = Namespace("https://newshunter.uib.no/resource#")
 g.bind("nh", nh)
 nhterm = Namespace("https://newshunter.uib.no/term#")
 g.bind("nhterm", nhterm)
 bn = BNode()
 bn2 = BNode()
 
-Event = URIRef("Event-resouce")
+event_hash_value = generate_hash()
+Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 Describer = URIRef("Describer")
 Relation = URIRef("relation")
 RelationFrom = URIRef("relationFrom")
