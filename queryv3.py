@@ -33,7 +33,6 @@ SELECT DISTINCT ?item1 ?item2 WHERE {
     FILTER(?item1 != ?item2)
 	FILTER(STR(?anc) = "Trump")
     }	
-    
     LIMIT 50
 """)
 
@@ -242,8 +241,6 @@ sparql.setReturnFormat(RDFXML)
 
 res = sparql.queryAndConvert()
 graph_str = res.serialize(format="ttl").decode("utf-8")
-g = Graph()
-g.parse(data=graph_str, format="ttl")
 
 
 #------------------Graph-------------------
