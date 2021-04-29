@@ -11,7 +11,6 @@
         nhterm:hasRelation <http://newshunter.uib.no/resource/CAMEO#THREATEN> ;
         nhterm:relationFrom <http://dbpedia.org/resource/Xi_Jinping> ;
         nhterm:relationTo <http://dbpedia.org/resource/United_States_Congress>
-
     ],
 
     [ a nhterm:Descriptor ;
