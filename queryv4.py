@@ -1,47 +1,75 @@
-import rdflib.plugins.sparql.parser
 from rdflib import Graph, Namespace, BNode, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
 import random
 import string
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML, XML
+import re
 
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
 # You also need to add "sparql" to end of the URL like below.
 
 sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
+
+# java -server -Xmx4g -jar blazegraph.jar
+
+
+sparql.setQuery("""
+PREFIX nhterm: <https://newshunter.uib.no/term#>
+    SELECT DISTINCT ?item1 ?item2 ?value  WHERE {
+
+        ?item1 a nhterm:Item ;
+        nhterm:hasAnnotation ?superAnnotation1 .
+        ?superAnnotation1 nhterm:hasEntity ?value . 
+    
+        ?item2 a nhterm:Item ;
+        nhterm:hasAnnotation ?superAnnotation2 .
+        ?superAnnotation2 nhterm:hasEntity ?value . 
+    }
+    LIMIT 10
+""")
+
+sparql.setReturnFormat(JSON)
+teste = sparql.query().convert()
+
+#for result in teste["results"]["bindings"]:
+ #   print(result)
+
 # -------------Items------------#
 
 """
+AnchorOf
+
 Return two items where the items match on having a Annotation 
 where the Annotation is nhterm:anchorOf 
 and the value is the same in both items
 """
 
-anchorOfValue = "Tesla"
-
 sparql.setQuery("""
 
 PREFIX nhterm: <https://newshunter.uib.no/term#>
-SELECT DISTINCT ?item1 ?item2 WHERE {
+    SELECT DISTINCT ?item1 ?item2 ?value sourceIRLValue1  sourceIRLValue1WHERE {
+    
+        ?item1 a nhterm:Item ;
+        nhterm:hasAnnotation ?superAnnotation1 .
+        ?superAnnotation1 nhterm:anchorOf ?value . 
+        nhterm:sourceIRL ?sourceIRLValue1 .
+    
+        ?item2 a nhterm:Item ;
+        nhterm:hasAnnotation ?superAnnotation2 .
+        ?superAnnotation2 nhterm:anchorOf ?value .
+        nhterm:sourceIRL ?sourceIRLValue2 .
 
-    ?item1 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation1 .
-    ?superAnnotation1 nhterm:anchorOf ?value . 
-
-    ?item2 a nhterm:Item ;
-    nhterm:hasAnnotation ?superAnnotation2 .
-    ?superAnnotation2 nhterm:anchorOf ?value . 
-    FILTER(STR(?value) ="%s" )
-    }
+         
+        }
     LIMIT 50
-"""%anchorOfValue)
+""")
 
 sparql.setReturnFormat(JSON)
 test = sparql.query().convert()
 
-#for result in test["results"]["bindings"]:
- #   print(result)
+for result in test["results"]["bindings"]:
+    print(result)
 
 
 """Return sourceDateTime for every item graph"""
@@ -50,11 +78,11 @@ test = sparql.query().convert()
 sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
     SELECT ?s ?p ?o
-    WHERE
-    {
-        ?s a nhterm:Item ;
-        nhterm:sourceDateTime ?o .
-    }
+        WHERE
+        {
+            ?s a nhterm:Item ;
+            nhterm:sourceDateTime ?o .
+        }
 """)
 sparql.setReturnFormat(JSON)
 sourceDateTime = sparql.query().convert()
@@ -66,18 +94,18 @@ d = 18
 sparql.setQuery("""
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT ?item ?dt ?year ?month ?day ?hours ?minutes 
-    WHERE
-    {
-        ?item a nhterm:Item ;
-        nhterm:sourceDateTime ?dt .
-        bind(year(?dt) as ?year)
-        bind(month(?dt) as ?month)
-        bind(day(?dt) as ?day)
-        bind(hours(?dt) as ?hours)
-        bind(minutes(?dt) as ?minutes)
-        FILTER((?year = 2020 && ?month = 9 && ?day = %s)) 
-    }
+        SELECT ?item ?dt ?year ?month ?day ?hours ?minutes 
+            WHERE
+            {
+                ?item a nhterm:Item ;
+                nhterm:sourceDateTime ?dt .
+                bind(year(?dt) as ?year)
+                bind(month(?dt) as ?month)
+                bind(day(?dt) as ?day)
+                bind(hours(?dt) as ?hours)
+                bind(minutes(?dt) as ?minutes)
+                FILTER((?year = 2020 && ?month = 9 && ?day = %s)) 
+            }
         ORDER BY ?year ?month ?day ?hours ?minutes
 
 """%d)
@@ -95,23 +123,23 @@ def annotation_lifter(item):
 
         sparql.setQuery("""
         PREFIX nhterm: <https://newshunter.uib.no/term#>
-        SELECT DISTINCT ?annotation_property ?annotation_value WHERE {
-            ?item a nhterm:Item;
-            ?p ?o;
-            nhterm:hasAnnotation ?annotation .
-            ?annotation ?annotation_property ?annotation_value .
+            SELECT DISTINCT ?annotation_property ?annotation_value WHERE {
+                ?item a nhterm:Item;
+                ?p ?o;
+                nhterm:hasAnnotation ?annotation .
+                ?annotation ?annotation_property ?annotation_value .
         FILTER(STR(?item) ="%s")
         }
         """%item)
         sparql.setReturnFormat(JSON)
         item = sparql.query().convert()
-        for result in item["results"]["bindings"]:
-            print(result)
+        #for result in item["results"]["bindings"]:
+          #  print(result)
 
         #print(result["annot_p"]["value"])
         #print(result["annot_o"]["value"])
 
-annotation_lifter(time_results)
+#annotation_lifter(time_results)
 
 '''
 for result in time_results["results"]["bindings"]:
@@ -181,8 +209,6 @@ g.add((Event, RDF.type, nhterm.Event))
 # sourceIRL
 #for s,p,o in output_graph.triples((None, nhterm.sourceIRL, None)):
 #   print(s,p,o)
-
-
 
 g.add((Event, nhterm.hasDescriptor, bn))
 

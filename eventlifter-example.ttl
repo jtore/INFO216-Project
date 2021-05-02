@@ -17,22 +17,12 @@
             nhterm:anchorOf "Xi Jinping"^^xsd:string ;
             nhterm:hasDescriber <http://www.wikidata.org/entity/Q18357239>,
                 <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Xi_Jinping>,
+            nhterm:hasEntity <http://dbpedia.org/resource/Xi_Jinping>],
 
     [ a nhterm:Descriptor ;
             nhterm:anchorOf "United States Congress"^^xsd:string ;
             nhterm:hasDescriber <http://www.wikidata.org/entity/Q18357239>,
                 <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/United_States_Congress> ;
-    nhterm:hasSourceIdentifier "978908422"^^xsd:string ],
+            nhterm:hasEntity <http://dbpedia.org/resource/United_States_Congress>];
+    nhterm:hasSourceIdentifier "978908422"^^xsd:string
 
-
-<http://dbpedia.org/resource/United_States_Congress> a nhterm:SocialActor ;
-    nhterm:hasEntityType <http://dbpedia.org/resource/Legislature>,
-        <http://newshunter.uib.no/resource/CAMEO#LEG> .
-
-<http://newshunter.uib.no/resource/CAMEO#THREATEN> a nhterm:Entity ;
-    rdfs:subClassOf <http://newshunter.uib.no/resource/CAMEO#MAKE_PUBLIC_STATEMENT> .
-
-<https://newshunter.uib.no/resource#21a0ed92-1af7-4d38-b2f7-affd850636e0> a nhterm:Item ;
-    nhterm:sourceIRL "https://www.lightreading.com/asia/chinas-five-year-plan-bigs-up-5g/d/d-id/768654"^^xsd:string .
