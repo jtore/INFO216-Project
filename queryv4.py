@@ -116,31 +116,21 @@ for items in entity["results"]["bindings"]:
 # ------------------- Make Event graph -------------------
 
     Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
-    Describer = URIRef("Describer")
-    Relation = URIRef("relation")
-    RelationFrom = URIRef("relationFrom")
-    RelationTo = URIRef("RelationTo")
 
-    #
+    # Event hash
     g.add((Event, RDF.type, nhterm.Event))
 
-    # DescribedBy
+    # nhterm:DescribedBy
     g.add((Event, nhterm.describedBy, URIRef(item1)))
     g.add((Event, nhterm.describedBy, URIRef(item2)))
 
     # hasDescriptor
     g.add((Event, nhterm.hasDescriptor, bn))
 
-    g.add((bn, RDF.type, nhterm.RelationDescriptor))
-
     # nhterm:hasDescriber
     g.add((bn, nhterm.hasDescriber, URIRef(annotator)))
 
-    g.add((bn, nhterm.hasRelation, Relation))
-    g.add((bn, nhterm.relationFrom, URIRef(entity)))
-    g.add((bn, nhterm.relationTo, URIRef(entity)))
-
-    # a nhterm descriptor
+    # nhterm:Descriptor
     g.add((Event, nhterm.hasDescriptor, bn2))
     g.add((bn2, RDF.type, nhterm.Descriptor))
 
@@ -155,8 +145,6 @@ for items in entity["results"]["bindings"]:
 
     #sourceIRL
     g.add((bn2, nhterm.sourceIRL, URIRef(irl)))
-
-    #g.add((bn2, nhterm.hasSourceIdentifier, Literal("Numbers", datatype=XSD.string)))
 
     print(g.serialize(format="ttl").decode("utf-8"))
 
@@ -194,7 +182,7 @@ sparql.setQuery("""
                 FILTER((?year = 2020 && ?month = 9 && ?day = %s)) 
             }
         ORDER BY ?year ?month ?day ?hours ?minutes
-
+        
 """%d)
 
 """ Constructs a graph object from the return value of the above query"""
