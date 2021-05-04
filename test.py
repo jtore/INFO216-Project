@@ -27,11 +27,9 @@ event_hash_value = generate_hash()
 sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 
-def item_lifter(i1, i2):
-    item_list = [i1, i2]
-    for i in item_list:
+def item_lifter(item):
 
-        sparql.setQuery("""
+    sparql.setQuery("""
                 PREFIX nhterm: <https://newshunter.uib.no/term#>
                 SELECT ?time ?text ?irl ?anchor ?contributor ?annotator ?collection
                     WHERE
@@ -48,107 +46,118 @@ def item_lifter(i1, i2):
                     ?superAnnotation1 nhterm:hasAnnotator ?annotator .
                     FILTER(STR(?item) ="%s")
                     }
-                    LIMIT 5
-            """ %i)
-        sparql.setReturnFormat(JSON)
+                    LIMIT 100
+            """%item)
+    sparql.setReturnFormat(JSON)
 
-        if i == i1:
-            return_item1 = sparql.query().convert()
-            for result in return_item1["results"]["bindings"]:
-                return result
+    return_block = sparql.query().convert()
+    for result in return_block["results"]["bindings"]:
+        return result
 
-        if i == i2:
-            return_item2 = sparql.query().convert()
-            for result in return_item2["results"]["bindings"]:
-                return result
 
 
 sparql.setQuery("""
 PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT DISTINCT ?item1 ?item2 ?entity1 ?entity2 WHERE {
+    SELECT DISTINCT ?item1 ?item2 ?entity WHERE {
 
         ?item1 a nhterm:Item ;
         nhterm:hasAnnotation ?superAnnotation1 .
-        ?superAnnotation1 nhterm:hasEntity ?entity1 . 
+        ?superAnnotation1 nhterm:hasEntity ?entity . 
 
         ?item2 a nhterm:Item ;
         nhterm:hasAnnotation ?superAnnotation2 .
-        ?superAnnotation2 nhterm:hasEntity ?entity2 . 
+        ?superAnnotation2 nhterm:hasEntity ?entity . 
         FILTER(?item1 != ?item2)
-        FILTER(?entity1 = ?entity2)
+        
     }
 
-    LIMIT 5
+    LIMIT 100
 """)
 sparql.setReturnFormat(JSON)
 entity_graph = sparql.query().convert()
 
 g = Graph()
+dict = {}
+item_list = []
 
 for items in entity_graph["results"]["bindings"]:
     item1 = items["item1"]["value"]
     item2 = items["item2"]["value"]
-    #print("entity1", items["entity1"]["value"])
-    #print("entity2", items["entity2"]["value"])
+    entity = items["entity"]["value"]
 
-    item_output = item_lifter(item1, item2)
+    if not dict.get(entity):
+        dict[entity] = [item1, item2]
+    else:
+        acc = dict.get(entity)
+        if item1 not in acc:
+            dict[entity].append(item1)
+        if item2 not in acc:
+            dict[entity].append(item2)
 
-    output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
-                   "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
-                   "collection": item_output["collection"]["value"]}
+for k,v in dict.items():
 
-    # ------------------- Make Event graph -------------------
+    print("Key:", k, "value:", v)
+    for item in v:
 
-    # Make graph
+        item_output = item_lifter(item)
+        print(item_output)
 
-    # Bind prefixes and namespaces to use
+        output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
+                       "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
+                       "collection": item_output["collection"]["value"]}
 
-    # nh
-    nh = Namespace("https://newshunter.uib.no/resource#")
-    g.bind("nh", nh)
 
-    # nhterm
-    nhterm = Namespace("https://newshunter.uib.no/term#")
-    g.bind("nhterm", nhterm)
 
-    # Blank nodes
-    bn = BNode()
-    bn2 = BNode()
-    bn3 = BNode()
+        # ------------------- Make Event graph -------------------
 
-    Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
+        # Make graph
 
-    # Event hash
-    g.add((Event, RDF.type, nhterm.Event))
+        # Bind prefixes and namespaces to use
 
-    # nhterm:DescribedBy
-    g.add((Event, nhterm.describedBy, URIRef(item1)))
-    g.add((Event, nhterm.describedBy, URIRef(item2)))
+        # nh
+        nh = Namespace("https://newshunter.uib.no/resource#")
+        g.bind("nh", nh)
 
-    # nhterm:hasDescriptor
-    g.add((Event, nhterm.hasDescriptor, bn))
+        # nhterm
+        nhterm = Namespace("https://newshunter.uib.no/term#")
+        g.bind("nhterm", nhterm)
 
-    # nhterm:hasDescriber
-    g.add((bn, nhterm.hasDescriber, URIRef(output_dict["annotator"])))
+        # Blank nodes
+        bn = BNode()
+        bn2 = BNode()
+        bn3 = BNode()
 
-    # nhterm:Descriptor
-    g.add((Event, nhterm.hasDescriptor, bn2))
-    g.add((bn2, RDF.type, nhterm.Descriptor))
+        Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 
-    # ntherm:anchorOf
-    g.add((bn2, nhterm.anchorOf, Literal(output_dict["anchor"], datatype=XSD.string)))
+        # Event hash
+        g.add((Event, RDF.type, nhterm.Event))
 
-    # nhterm:hasDescriber
-    g.add((bn2, nhterm.hasDescriber, URIRef(output_dict["collection"])))
+        # nhterm:DescribedBy
+        g.add((Event, nhterm.describedBy, URIRef(item)))
 
-    # nhterm:hasEntity
-    #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
+        # nhterm:hasDescriptor
+        g.add((Event, nhterm.hasDescriptor, bn))
 
-    # nhterm:sourceIRL
-    g.add((bn2, nhterm.sourceIRL, URIRef(output_dict["irl"])))
+        # nhterm:hasDescriber
+        g.add((bn, nhterm.hasDescriber, URIRef(output_dict["annotator"])))
 
-print(g.serialize(format="ttl").decode("utf-8"))
+        # nhterm:Descriptor
+        g.add((Event, nhterm.hasDescriptor, bn2))
+        g.add((bn2, RDF.type, nhterm.Descriptor))
+
+        # ntherm:anchorOf
+        g.add((bn2, nhterm.anchorOf, Literal(output_dict["anchor"], datatype=XSD.string)))
+
+        # nhterm:hasDescriber
+        g.add((bn2, nhterm.hasDescriber, URIRef(output_dict["collection"])))
+
+        # nhterm:hasEntity
+        #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
+
+        # nhterm:sourceIRL
+        g.add((bn2, nhterm.sourceIRL, URIRef(output_dict["irl"])))
+
+        print(g.serialize(format="ttl").decode("utf-8"))
 
 # java -server -Xmx4g -jar blazegraph.jar
-
 
