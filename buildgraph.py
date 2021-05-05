@@ -32,11 +32,11 @@ Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 Describer = URIRef("Describer")
 Relation = URIRef("relation")
 RelationFrom = URIRef("relationFrom")
-RelationTo = URIRef("RelationTo")
+RelationTo = URIRef("relationTo")
 
 
 g.add((Event, RDF.type, nhterm.Event))
-g.add((Event, nhterm.describedBy, Literal("ID")))
+g.add((Event, nhterm.describedBy, Literal("item-1")))
 g.add((Event, nhterm.hasDescriptor, bn))
 
 g.add((bn, RDF.type, nhterm.RelationDescriptor))
@@ -50,6 +50,5 @@ g.add((bn2, RDF.type, nhterm.Descriptor))
 g.add((bn2, nhterm.anchorOf, Literal("String", datatype=XSD.string)))
 g.add((bn2, nhterm.hasDescriber, Describer))
 g.add((bn2, nhterm.hasEntity, Literal("Entity")))
-g.add((bn2, nhterm.hasSourceIdentifier, Literal("Numbers", datatype=XSD.string)))
 
 print(g.serialize(format="ttl").decode("utf-8"))
