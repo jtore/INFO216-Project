@@ -8,6 +8,12 @@ import re
 
 # java -server -Xmx4g -jar blazegraph.jar
 
+# output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
+#              "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
+#              "collection": item_output["collection"]["value"]}
+
+# print(output_dict)
+
 
 # Generate a hash to use as a ID for a nhterm:Event
 def generate_hash():
@@ -75,7 +81,7 @@ sparql.setReturnFormat(JSON)
 entity_graph = sparql.query().convert()
 
 dict = {}
-item_list = []
+item_lifter_output_list = []
 
 for items in entity_graph["results"]["bindings"]:
     item1 = items["item1"]["value"]
@@ -91,16 +97,19 @@ for items in entity_graph["results"]["bindings"]:
         if item2 not in acc:
             dict[entity].append(item2)
 
+# For each entity and the list containing items related to that entity
 for k, v in dict.items():
     #print("-- Item --")
 
-    item_list = []
+    # Make a list to store the output from item_lifter when applied to each item related to an entity
+    item_lifter_output_list = []
     print("Key:", k, "value:", v)
-    #print(v)
-    for item in v:
-        item_output = item_lifter(item)
-        # print(item_output)
-        item_list.append(item_output)
+
+    # For each item in the list of items related to an entity, apply the item_lifter function
+    for result in v:
+        item_output = item_lifter(result)
+        # Append the result to item_lifter_output_list
+        item_lifter_output_list.append(item_output)
 
     #print(item_list)
 
@@ -110,11 +119,12 @@ for k, v in dict.items():
     annotator_list = []
     collection = []
 
-    for item in item_list:
-        time_list.append(item["time"]["value"])
-        irl_list.append(item["irl"]["value"])
-        anchor_list.append(item["anchor"]["value"])
-        collection.append(item["collection"]["value"])
+    # Takes the different value properties and adds them in separate lists
+    for result in item_lifter_output_list:
+        time_list.append(result["time"]["value"])
+        irl_list.append(result["irl"]["value"])
+        anchor_list.append(result["anchor"]["value"])
+        collection.append(result["collection"]["value"])
 
     g = Graph()
     print(time_list)
@@ -122,11 +132,6 @@ for k, v in dict.items():
     print(anchor_list)
     print(collection)
 
-    # output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
-    #              "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
-    #              "collection": item_output["collection"]["value"]}
-
-    # print(output_dict)
 
     # ------------------- Make Event graph -------------------
 
@@ -145,7 +150,6 @@ for k, v in dict.items():
     # Blank nodes
     bn = BNode()
     bn2 = BNode()
-    bn3 = BNode()
 
     Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 
@@ -153,11 +157,11 @@ for k, v in dict.items():
     g.add((Event, RDF.type, nhterm.Event))
 
     # nhterm:DescribedBy
-    for item in v:
-        g.add((Event, nhterm.describedBy, URIRef(item)))
+    for result in v:
+        g.add((Event, nhterm.describedBy, URIRef(result)))
 
     # nhterm:hasDescriptor
-    g.add((Event, nhterm.hasDescriptor, bn))
+    #g.add((Event, nhterm.hasDescriptor, bn))
 
     # nhterm:hasDescriber
     for annotator in annotator_list:

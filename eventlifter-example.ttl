@@ -4,11 +4,6 @@
 
 <https://newshunter.uib.no/resource#1ace221a-f3cd-4cd9-b007-b42780bfc1b5> a nhterm:Event ;
     nhterm:describedBy <https://newshunter.uib.no/resource#21a0ed92-1af7-4d38-b2f7-affd850636e0> ;
-    nhterm:hasDescriptor [ a nhterm:RelationDescriptor ;
-            nhterm:hasDescriber <http://www.wikidata.org/entity/Q18357239> ;
-            nhterm:hasRelation <http://newshunter.uib.no/resource/CAMEO#THREATEN> ;
-            nhterm:relationFrom <http://dbpedia.org/resource/Xi_Jinping> ;
-            nhterm:relationTo <http://dbpedia.org/resource/United_States_Congress> ],
 
          [ a nhterm:Descriptor ;
             nhterm:anchorOf "Xi Jinping"^^xsd:string ;
