@@ -10,7 +10,7 @@ import re
 
 
 # Generate a hash to use as a ID for a nhterm:Event
-def generate_hash():
+def uuid_generator():
     start_sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(8))
     _2sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
     _3sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
@@ -21,37 +21,38 @@ def generate_hash():
     return _hash
 
 
-event_hash_value = generate_hash()
+event_hash_value = uuid_generator()
 
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
 sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 
-def item_lifter(item):
+def item_lifter(external_item):
     sparql.setQuery("""
-                PREFIX nhterm: <https://newshunter.uib.no/term#>
-                SELECT ?time ?text ?irl ?anchor ?contributor ?annotator ?collection
-                    WHERE
-                    {
-                    ?item a nhterm:Item ;
-                        nhterm:originalText ?o ;
-                        nhterm:sourceDateTime ?time ;
-                        nhterm:sourceIRL ?irl ;
-                        nhterm:hasContributor ?contributor ;
-                        nhterm:inCollection ?collection ;
+    PREFIX nhterm: <https://newshunter.uib.no/term#>
+        SELECT ?time ?text ?irl ?anchor ?contributor ?annotator ?collection
+            WHERE
+            {
+            ?item a nhterm:Item ;
+                nhterm:originalText ?text ;
+                nhterm:sourceDateTime ?time ;
+                nhterm:sourceIRL ?irl ;
+                nhterm:hasContributor ?contributor ;
+                nhterm:inCollection ?collection ;
 
-                    nhterm:hasAnnotation ?superAnnotation1 .
-                    ?superAnnotation1 nhterm:anchorOf ?anchor .
-                    ?superAnnotation1 nhterm:hasAnnotator ?annotator .
-                    FILTER(STR(?item) ="%s")
-                    }
-                    LIMIT 1000
-            """ % item)
+            nhterm:hasAnnotation ?superAnnotation1 .
+            ?superAnnotation1 nhterm:anchorOf ?anchor .
+            ?superAnnotation1 nhterm:hasAnnotator ?annotator .
+            FILTER(STR(?item) ="%s")
+            }
+            LIMIT 1000
+            """ % external_item)
     sparql.setReturnFormat(JSON)
 
     return_block = sparql.query().convert()
     for result in return_block["results"]["bindings"]:
         return result
+
 
 
 sparql.setQuery("""
@@ -108,19 +109,22 @@ for k, v in dict.items():
     irl_list = []
     anchor_list = []
     annotator_list = []
-    collection = []
+    collection_list = []
+    text_list = []
 
     for item in item_list:
         time_list.append(item["time"]["value"])
         irl_list.append(item["irl"]["value"])
         anchor_list.append(item["anchor"]["value"])
-        collection.append(item["collection"]["value"])
+        collection_list.append(item["collection"]["value"])
+        text_list.append(item["text"]["value"])
 
     g = Graph()
     print(time_list)
     print(irl_list)
     print(anchor_list)
-    print(collection)
+    print(collection_list)
+    print(text_list)
 
     # output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
     #              "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
@@ -145,7 +149,6 @@ for k, v in dict.items():
     # Blank nodes
     bn = BNode()
     bn2 = BNode()
-    bn3 = BNode()
 
     Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 
@@ -157,7 +160,7 @@ for k, v in dict.items():
         g.add((Event, nhterm.describedBy, URIRef(item)))
 
     # nhterm:hasDescriptor
-    g.add((Event, nhterm.hasDescriptor, bn))
+    #g.add((Event, nhterm.hasDescriptor, bn))
 
     # nhterm:hasDescriber
     for annotator in annotator_list:
@@ -173,7 +176,7 @@ for k, v in dict.items():
         g.add((bn2, nhterm.anchorOf, Literal(anchor, datatype=XSD.string)))
 
     # nhterm:hasDescriber
-    for collec in collection:
+    for collec in collection_list:
         g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
 
     # nhterm:hasEntity
@@ -186,6 +189,10 @@ for k, v in dict.items():
     # SourceDateTime
     for time in time_list:
         g.add((bn2, nhterm.sourceDateTime, URIRef(time)))
+
+    # originalText
+    for text in text_list:
+        g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
 
     print(g.serialize(format="ttl").decode("utf-8"))
 
