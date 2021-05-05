@@ -28,7 +28,6 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 
 
 def item_lifter(item):
-
     sparql.setQuery("""
                 PREFIX nhterm: <https://newshunter.uib.no/term#>
                 SELECT ?time ?text ?irl ?anchor ?contributor ?annotator ?collection
@@ -46,14 +45,13 @@ def item_lifter(item):
                     ?superAnnotation1 nhterm:hasAnnotator ?annotator .
                     FILTER(STR(?item) ="%s")
                     }
-                    LIMIT 100
-            """%item)
+                    LIMIT 1000
+            """ % item)
     sparql.setReturnFormat(JSON)
 
     return_block = sparql.query().convert()
     for result in return_block["results"]["bindings"]:
         return result
-
 
 
 sparql.setQuery("""
@@ -71,12 +69,11 @@ PREFIX nhterm: <https://newshunter.uib.no/term#>
         
     }
 
-    LIMIT 100
+    LIMIT 1000
 """)
 sparql.setReturnFormat(JSON)
 entity_graph = sparql.query().convert()
 
-g = Graph()
 dict = {}
 item_list = []
 
@@ -94,70 +91,103 @@ for items in entity_graph["results"]["bindings"]:
         if item2 not in acc:
             dict[entity].append(item2)
 
-for k,v in dict.items():
+for k, v in dict.items():
+    #print("-- Item --")
 
+    item_list = []
     print("Key:", k, "value:", v)
+    #print(v)
     for item in v:
-
         item_output = item_lifter(item)
-        print(item_output)
+        # print(item_output)
+        item_list.append(item_output)
 
-        output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
-                       "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
-                       "collection": item_output["collection"]["value"]}
+    #print(item_list)
 
+    time_list = []
+    irl_list = []
+    anchor_list = []
+    annotator_list = []
+    collection = []
 
+    for item in item_list:
+        time_list.append(item["time"]["value"])
+        irl_list.append(item["irl"]["value"])
+        anchor_list.append(item["anchor"]["value"])
+        collection.append(item["collection"]["value"])
 
-        # ------------------- Make Event graph -------------------
+    g = Graph()
+    print(time_list)
+    print(irl_list)
+    print(anchor_list)
+    print(collection)
 
-        # Make graph
+    # output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
+    #              "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
+    #              "collection": item_output["collection"]["value"]}
 
-        # Bind prefixes and namespaces to use
+    # print(output_dict)
 
-        # nh
-        nh = Namespace("https://newshunter.uib.no/resource#")
-        g.bind("nh", nh)
+    # ------------------- Make Event graph -------------------
 
-        # nhterm
-        nhterm = Namespace("https://newshunter.uib.no/term#")
-        g.bind("nhterm", nhterm)
+    # Make graph
 
-        # Blank nodes
-        bn = BNode()
-        bn2 = BNode()
-        bn3 = BNode()
+    # Bind prefixes and namespaces to use
 
-        Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
+    # nh
+    nh = Namespace("https://newshunter.uib.no/resource#")
+    g.bind("nh", nh)
 
-        # Event hash
-        g.add((Event, RDF.type, nhterm.Event))
+    # nhterm
+    nhterm = Namespace("https://newshunter.uib.no/term#")
+    g.bind("nhterm", nhterm)
 
-        # nhterm:DescribedBy
+    # Blank nodes
+    bn = BNode()
+    bn2 = BNode()
+    bn3 = BNode()
+
+    Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
+
+    # Event hash
+    g.add((Event, RDF.type, nhterm.Event))
+
+    # nhterm:DescribedBy
+    for item in v:
         g.add((Event, nhterm.describedBy, URIRef(item)))
 
-        # nhterm:hasDescriptor
-        g.add((Event, nhterm.hasDescriptor, bn))
+    # nhterm:hasDescriptor
+    g.add((Event, nhterm.hasDescriptor, bn))
 
-        # nhterm:hasDescriber
-        g.add((bn, nhterm.hasDescriber, URIRef(output_dict["annotator"])))
+    # nhterm:hasDescriber
+    for annotator in annotator_list:
+        g.add((bn, nhterm.hasDescriber, URIRef(annotator)))
 
-        # nhterm:Descriptor
-        g.add((Event, nhterm.hasDescriptor, bn2))
-        g.add((bn2, RDF.type, nhterm.Descriptor))
+    # nhterm:Descriptor
+    g.add((Event, nhterm.hasDescriptor, bn2))
+    g.add((bn2, RDF.type, nhterm.Descriptor))
 
-        # ntherm:anchorOf
-        g.add((bn2, nhterm.anchorOf, Literal(output_dict["anchor"], datatype=XSD.string)))
 
-        # nhterm:hasDescriber
-        g.add((bn2, nhterm.hasDescriber, URIRef(output_dict["collection"])))
+    # ntherm:anchorOf
+    for anchor in anchor_list:
+        g.add((bn2, nhterm.anchorOf, Literal(anchor, datatype=XSD.string)))
 
-        # nhterm:hasEntity
-        #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
+    # nhterm:hasDescriber
+    for collec in collection:
+        g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
 
-        # nhterm:sourceIRL
-        g.add((bn2, nhterm.sourceIRL, URIRef(output_dict["irl"])))
+    # nhterm:hasEntity
+    #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
 
-        print(g.serialize(format="ttl").decode("utf-8"))
+    # nhterm:sourceIRL
+    for irl in irl_list:
+        g.add((bn2, nhterm.sourceIRL, URIRef(irl)))
+
+    # SourceDateTime
+    for time in time_list:
+        g.add((bn2, nhterm.sourceDateTime, URIRef(time)))
+
+    print(g.serialize(format="ttl").decode("utf-8"))
+
 
 # java -server -Xmx4g -jar blazegraph.jar
-
