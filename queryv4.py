@@ -17,8 +17,10 @@ Return two items where the items match on having a Annotation
 where the Annotation is nhterm:anchorOf 
 and the value is the same in both items
 """
-
+dbpediaLink = "http://dbpedia.org/resource/"
+searchValue = "Coronavirus"
 anchorOfValue = "Tesla"
+searchValue = dbpediaLink + searchValue
 
 sparql.setQuery("""
 
@@ -61,7 +63,7 @@ sourceDateTime = sparql.query().convert()
 
 """Return items ordered by date and organized by items grouped from date and time"""
 
-d = 18
+d = 29
 
 sparql.setQuery("""
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -80,7 +82,7 @@ sparql.setQuery("""
     }
         ORDER BY ?year ?month ?day ?hours ?minutes
 
-"""%d)
+"""%s)
 
 """ Constructs a graph object from the return value of the above query"""
 time_results = sparql.query().convert()
@@ -110,6 +112,7 @@ def annotation_lifter(item):
 
         #print(result["annot_p"]["value"])
         #print(result["annot_o"]["value"])
+
 
 annotation_lifter(time_results)
 
