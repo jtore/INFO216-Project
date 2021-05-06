@@ -18,5 +18,3 @@
             nhterm:hasEntity <http://dbpedia.org/resource/United_States_Congress> ;
     nhterm:hasSourceIdentifier "978908422"^^xsd:string .
 
-<https://newshunter.uib.no/resource#21a0ed92-1af7-4d38-b2f7-affd850636e0> a nhterm:Item ;
-    nhterm:sourceIRL "https://www.lightreading.com/asia/chinas-five-year-plan-bigs-up-5g/d/d-id/768654"^^xsd:string .

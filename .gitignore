@@ -7,3 +7,4 @@
 *.jar
 *.jnl
 rules.log
+/datasets/
