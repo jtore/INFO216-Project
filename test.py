@@ -75,7 +75,7 @@ PREFIX nhterm: <https://newshunter.uib.no/term#>
 sparql.setReturnFormat(JSON)
 entity_graph = sparql.query().convert()
 
-dict = {}
+entity_item_dict = {}
 item_list = []
 
 for items in entity_graph["results"]["bindings"]:
@@ -83,34 +83,26 @@ for items in entity_graph["results"]["bindings"]:
     item2 = items["item2"]["value"]
     entity = items["entity"]["value"]
 
-    if not dict.get(entity):
-        dict[entity] = [item1, item2]
+    if not entity_item_dict.get(entity):
+        entity_item_dict[entity] = [item1, item2]
     else:
-        acc = dict.get(entity)
-        if item1 not in acc:
-            dict[entity].append(item1)
-        if item2 not in acc:
-            dict[entity].append(item2)
+        set_items = entity_item_dict.get(entity)
+        if item1 not in set_items:
+            entity_item_dict[entity].append(item1)
+        if item2 not in set_items:
+            entity_item_dict[entity].append(item2)
 
-for k, v in dict.items():
-    #print("-- Item --")
+for key_entity, item_list_value in entity_item_dict.items():
+    print("-- Item --")
 
     item_list = []
-    print("Key:", k, "value:", v)
-    #print(v)
-    for item in v:
+    print("Key:", key_entity, "value:", item_list_value)
+    for item in item_list_value:
         item_output = item_lifter(item)
-        # print(item_output)
         item_list.append(item_output)
 
-    #print(item_list)
-
-    time_list = []
-    irl_list = []
-    anchor_list = []
-    annotator_list = []
-    collection_list = []
-    text_list = []
+    # Initizalises the lists which are to hold the values related to an entity
+    time_list, irl_list, anchor_list, annotator_list, collection_list, text_list = ([] for i in range(6))
 
     for item in item_list:
         time_list.append(item["time"]["value"])
@@ -124,18 +116,11 @@ for k, v in dict.items():
     print(irl_list)
     print(anchor_list)
     print(collection_list)
-    print(text_list)
-
-    # output_dict = {"time": item_output["time"]["value"], "irl": item_output["irl"]["value"],
-    #              "anchor": item_output["anchor"]["value"], "annotator": item_output["annotator"]["value"],
-    #              "collection": item_output["collection"]["value"]}
-
-    # print(output_dict)
+    #print(text_list)
 
     # ------------------- Make Event graph -------------------
 
     # Make graph
-
     # Bind prefixes and namespaces to use
 
     # nh
@@ -156,11 +141,8 @@ for k, v in dict.items():
     g.add((Event, RDF.type, nhterm.Event))
 
     # nhterm:DescribedBy
-    for item in v:
+    for item in item_list_value:
         g.add((Event, nhterm.describedBy, URIRef(item)))
-
-    # nhterm:hasDescriptor
-    #g.add((Event, nhterm.hasDescriptor, bn))
 
     # nhterm:hasDescriber
     for annotator in annotator_list:
@@ -169,7 +151,6 @@ for k, v in dict.items():
     # nhterm:Descriptor
     g.add((Event, nhterm.hasDescriptor, bn2))
     g.add((bn2, RDF.type, nhterm.Descriptor))
-
 
     # ntherm:anchorOf
     for anchor in anchor_list:
@@ -191,8 +172,8 @@ for k, v in dict.items():
         g.add((bn2, nhterm.sourceDateTime, URIRef(time)))
 
     # originalText
-    for text in text_list:
-        g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
+    #for text in text_list:
+     #   g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
 
     print(g.serialize(format="ttl").decode("utf-8"))
 
