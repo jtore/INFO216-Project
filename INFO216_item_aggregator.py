@@ -7,7 +7,7 @@ import uuid_generator
 sparql = SPARQLWrapper("http://sandbox.i2s.uib.no/bigdata/sparql")
 
 
-"""-------------------Item lifter function-------------------"""
+"""-------------------Item lifter-------------------"""
 
 
 # Explained in the report
@@ -41,7 +41,7 @@ def item_lifter(external_item):
 # Explained in the report
 
 
-def make_entity_item_dict():
+def make_entity_dict():
     sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
         SELECT DISTINCT ?item1 ?item2 ?entity ?anchor1 ?anchor2 ?annotator1 ?annotator2 WHERE {
@@ -127,13 +127,15 @@ def make_entity_item_dict():
     return entity_item_dict, entity_anchor_dict, entity_annotator_dict
 
 
-"""------------------- Constructing the graph -------------------"""
+"""------------------- Graph constructor -------------------"""
 
 
 def graph_constructor():
 
+    """------------------- Preparing the data for insertion into the graph -------------------"""
+
     # For each entity and the list containing items related to that entity
-    for key_entity, item_list_value in make_entity_item_dict()[0].items():
+    for key_entity, item_list_value in make_entity_dict()[0].items():
 
         # Make a list to store the output from item_lifter when applied to each item related to an entity
         item_list = []
@@ -158,12 +160,13 @@ def graph_constructor():
             originaltext_list.append(item["text"]["value"])
 
         # Gets all the anchorOf values for the specific entity and removes duplicates if they exist
-        anchor_list = list(set(make_entity_item_dict()[1].get(key_entity)))
+        anchor_list = list(set(make_entity_dict()[1].get(key_entity)))
 
         # The same as above but for the list of annotations for a specific entity
-        annotator_list = list(set(make_entity_item_dict()[2].get(key_entity)))
+        annotator_list = list(set(make_entity_dict()[2].get(key_entity)))
 
-        """-------------------Adding to the graph-------------------"""
+        """-------------------Adding to the graph -------------------"""
+
         # Make empty graph
         g = Graph()
 
