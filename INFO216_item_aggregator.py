@@ -78,92 +78,102 @@ def make_entity_item_dict():
 ###
 
 
-for key_entity, item_list_value in make_entity_item_dict().items():
-    print("-- Item --")
+def graph_constructor():
+    # For each entity and the list containing items related to that entity
+    for key_entity, item_list_value in make_entity_item_dict().items():
 
-    item_list = []
-    print("Key:", key_entity, "value:", item_list_value)
-    for item in item_list_value:
-        item_output = item_lifter(item)
-        item_list.append(item_output)
+        print("-- Item --")
+        # Make a list to store the output from item_lifter when applied to each item related to an entity
+        item_list = []
 
-    # Initizalises the lists which are to hold the values related to an entity
-    time_list, irl_list, anchor_list, annotator_list, collection_list, text_list = ([] for i in range(6))
+        print("Key:", key_entity, "value:", item_list_value)
 
-    for item in item_list:
-        time_list.append(item["time"]["value"])
-        irl_list.append(item["irl"]["value"])
-        anchor_list.append(item["anchor"]["value"])
-        collection_list.append(item["collection"]["value"])
-        text_list.append(item["text"]["value"])
+        # For each item in the list of items related to an entity, apply the item_lifter function
+        for item in item_list_value:
+            item_output = item_lifter(item)
+            item_list.append(item_output)
 
-    g = Graph()
-    print(time_list)
-    print(irl_list)
-    print(anchor_list)
-    print(collection_list)
-    #print(text_list)
+        # Initizalises the lists which are to hold the values related to an entity
+        time_list, irl_list, anchor_list, annotator_list, collection_list, text_list = ([] for i in range(6))
 
-    # ------------------- Make Event graph -------------------
+        # Takes the different value properties and adds them in separate lists
+        for item in item_list:
+            time_list.append(item["time"]["value"])
+            irl_list.append(item["irl"]["value"])
+            anchor_list.append(item["anchor"]["value"])
+            collection_list.append(item["collection"]["value"])
+            text_list.append(item["text"]["value"])
 
-    # Make graph
-    # Bind prefixes and namespaces to use
+        print(time_list)
+        print(irl_list)
+        print(anchor_list)
+        print(collection_list)
+        #print(text_list)
 
-    # nh
-    nh = Namespace("https://newshunter.uib.no/resource#")
-    g.bind("nh", nh)
+        # ------------------- Make Event graph -------------------
 
-    # nhterm
-    nhterm = Namespace("https://newshunter.uib.no/term#")
-    g.bind("nhterm", nhterm)
+        # Make graph
+        g = Graph()
 
-    # Blank nodes
-    bn = BNode()
-    bn2 = BNode()
+        # Bind prefixes and namespaces to use
+        # nh
+        nh = Namespace("https://newshunter.uib.no/resource#")
+        g.bind("nh", nh)
 
-    event_hash_value = uuid_generator.generate_uuid()
+        # nhterm
+        nhterm = Namespace("https://newshunter.uib.no/term#")
+        g.bind("nhterm", nhterm)
 
-    Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
+        # Blank nodes
+        bn = BNode()
+        bn2 = BNode()
 
-    # Event hash
-    g.add((Event, RDF.type, nhterm.Event))
+        event_hash_value = uuid_generator.generate_uuid()
 
-    # nhterm:DescribedBy
-    for item in item_list_value:
-        g.add((Event, nhterm.describedBy, URIRef(item)))
+        Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 
-    # nhterm:hasDescriber
-    for annotator in annotator_list:
-        g.add((bn, nhterm.hasDescriber, URIRef(annotator)))
+        # Event hash
+        g.add((Event, RDF.type, nhterm.Event))
 
-    # nhterm:Descriptor
-    g.add((Event, nhterm.hasDescriptor, bn2))
-    g.add((bn2, RDF.type, nhterm.Descriptor))
+        # nhterm:DescribedBy
+        for item in item_list_value:
+            g.add((Event, nhterm.describedBy, URIRef(item)))
 
-    # ntherm:anchorOf
-    for anchor in anchor_list:
-        g.add((bn2, nhterm.anchorOf, Literal(anchor, datatype=XSD.string)))
+        # nhterm:hasDescriber
+        for annotator in annotator_list:
+            g.add((bn, nhterm.hasDescriber, URIRef(annotator)))
 
-    # nhterm:hasDescriber
-    for collec in collection_list:
-        g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
+        # nhterm:Descriptor
+        g.add((Event, nhterm.hasDescriptor, bn2))
+        g.add((bn2, RDF.type, nhterm.Descriptor))
 
-    # nhterm:hasEntity
-    #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
+        # ntherm:anchorOf
+        for anchor in anchor_list:
+            g.add((bn2, nhterm.anchorOf, Literal(anchor, datatype=XSD.string)))
 
-    # nhterm:sourceIRL
-    for irl in irl_list:
-        g.add((bn2, nhterm.sourceIRL, URIRef(irl)))
+        # nhterm:hasDescriber
+        for collec in collection_list:
+            g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
 
-    # SourceDateTime
-    for time in time_list:
-        g.add((bn2, nhterm.sourceDateTime, URIRef(time)))
+        # nhterm:hasEntity
+        #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
 
-    # originalText
-    #for text in text_list:
-     #   g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
+        # nhterm:sourceIRL
+        for irl in irl_list:
+            g.add((bn2, nhterm.sourceIRL, URIRef(irl)))
 
-    print(g.serialize(format="ttl").decode("utf-8"))
+        # SourceDateTime
+        for time in time_list:
+            g.add((bn2, nhterm.sourceDateTime, URIRef(time)))
 
+        # originalText
+        #for text in text_list:
+         #   g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
+
+        print(g.serialize(format="ttl").decode("utf-8"))
+
+
+if __name__ == '__main__':
+    graph_constructor()
 
 # java -server -Xmx4g -jar blazegraph.jar
