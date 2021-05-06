@@ -82,18 +82,18 @@ def graph_constructor():
     # For each entity and the list containing items related to that entity
     for key_entity, item_list_value in make_entity_item_dict().items():
 
-        print("-- Item --")
+        #print("-- Item --")
         # Make a list to store the output from item_lifter when applied to each item related to an entity
         item_list = []
 
-        print("Key:", key_entity, "value:", item_list_value)
+        #print("Key:", key_entity, "value:", item_list_value)
 
         # For each item in the list of items related to an entity, apply the item_lifter function
         for item in item_list_value:
             item_output = item_lifter(item)
             item_list.append(item_output)
 
-        # Initizalises the lists which are to hold the values related to an entity
+        # Initialises the lists which are to hold the values related to an entity
         time_list, irl_list, anchor_list, annotator_list, collection_list, text_list = ([] for i in range(6))
 
         # Takes the different value properties and adds them in separate lists
@@ -104,10 +104,10 @@ def graph_constructor():
             collection_list.append(item["collection"]["value"])
             text_list.append(item["text"]["value"])
 
-        print(time_list)
-        print(irl_list)
-        print(anchor_list)
-        print(collection_list)
+        #print(time_list)
+        #print(irl_list)
+        #print(anchor_list)
+        #print(collection_list)
         #print(text_list)
 
         # ------------------- Make Event graph -------------------
@@ -170,7 +170,7 @@ def graph_constructor():
         #for text in text_list:
          #   g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
 
-        print(g.serialize(format="ttl").decode("utf-8"))
+        #print(g.serialize(format="ttl").decode("utf-8"))
 
 
 if __name__ == '__main__':

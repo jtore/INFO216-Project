@@ -1301,7 +1301,7 @@ nh:57211531-aa64-41ff-bb88-56229e9e1478 a nhterm:Item ;
         [ a nhterm:Annotation ;
             nhterm:anchorOf "captain"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
-            nhterm:hasEntity <http://dbpedia.org/resource/Sea_captain> ],
+            nhterm:hasEntity <http://dbpedia.org/resource/http://dbpedia.org/resource/Australia > ],
         [ a nhterm:Annotation ;
             nhterm:anchorOf "border guard"^^xsd:string ;
             nhterm:hasAnnotator <https://www.wikidata.org/wiki/Q276902> ;
