@@ -3,18 +3,14 @@ from rdflib.namespace import RDF, XSD
 from SPARQLWrapper import SPARQLWrapper, JSON
 import uuid_generator
 
-""" To run our program you first need to:
-    #  Open command prompt
-    #  Enter java -server -Xmx4g -jar blazegraph.jar
-"""
-
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
-sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
+sparql = SPARQLWrapper("http://sandbox.i2s.uib.no/bigdata/sparql")
+
 
 """-------------------Item lifter function-------------------"""
+
+
 # Explained in the report
-
-
 def item_lifter(external_item):
     sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
@@ -71,7 +67,7 @@ def make_entity_item_dict():
     entity_anchor_dict = {}
     entity_annotator_dict = {}
 
-    # For each item in the entity_graph produced by the above query [48-67]
+    # For each item in the entity_graph produced by the above query
     for items in entity_graph["results"]["bindings"]:
         # Here we assign each result to a variable so that we can make pairs later
         item1 = items["item1"]["value"]
@@ -96,6 +92,8 @@ def make_entity_item_dict():
             # Get all items, anchors and annotators for an entity
             check_items = entity_item_dict.get(entity)
             check_anchor = entity_anchor_dict.get(entity)
+            # Even though all items have one in the current dataset has annotator,
+            # they might have two so we want to check for that aswell
             check_annotator = entity_annotator_dict.get(entity)
 
             # For our current set of items in entity_graph:
@@ -104,24 +102,24 @@ def make_entity_item_dict():
                 # Append the item related to the entity into the list of items
                 entity_item_dict[entity].append(item1)
 
+            # Same as for item1, but for the second item in the comparison
+            if item2 not in check_items:
+                entity_item_dict[entity].append(item2)
+
             # If the first anchor value in our anchor pairs is not already in the dictionary
             if anchor1 not in check_anchor:
                 # Add the anchor to the value list in the dictionary
                 entity_anchor_dict[entity].append(anchor1)
 
+            # Same as for anchor1, but for the second anchor in the value-pair
+            if anchor2 not in check_anchor:
+                entity_anchor_dict[entity].append(anchor2)
+
             # If the first annotator value is not in the dictionary containing annotators for our entity
             if annotator1 not in check_annotator:
                 entity_annotator_dict[entity].append(annotator1)
 
-            # Same as for item1[104], but for the second item in the comparison
-            if item2 not in check_items:
-                entity_item_dict[entity].append(item2)
-
-            # Same as for anchor1[109], but for the second anchor in the value-pair
-            if anchor2 not in check_anchor:
-                entity_anchor_dict[entity].append(anchor2)
-
-            # Same as for annotator1[113], but for the second annotator
+            # Same as for annotator1, but for the second annotator
             if annotator2 not in check_annotator:
                 entity_annotator_dict[entity].append(annotator2)
 
@@ -133,6 +131,7 @@ def make_entity_item_dict():
 
 
 def graph_constructor():
+
     # For each entity and the list containing items related to that entity
     for key_entity, item_list_value in make_entity_item_dict()[0].items():
 
@@ -164,7 +163,7 @@ def graph_constructor():
         # The same as above but for the list of annotations for a specific entity
         annotator_list = list(set(make_entity_item_dict()[2].get(key_entity)))
 
-    # ------------------- Adding to the Event graph -------------------
+        """-------------------Adding to the graph-------------------"""
         # Make empty graph
         g = Graph()
 
