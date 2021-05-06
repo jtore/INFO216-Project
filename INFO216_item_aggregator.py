@@ -59,6 +59,7 @@ def make_entity_item_dict():
     entity_anchor_dict = {}
     entity_annotator_dict = {}
 
+
     for items in entity_graph["results"]["bindings"]:
         item1 = items["item1"]["value"]
         item2 = items["item2"]["value"]
@@ -87,8 +88,7 @@ def make_entity_item_dict():
                 entity_item_dict[entity].append(item1)
 
             if anchor1 not in check_anchor:
-                if anchor2 != None:
-                    entity_anchor_dict[entity].append(anchor1)
+                entity_anchor_dict[entity].append(anchor1)
 
             if annotator1 not in check_annotator:
                 entity_annotator_dict[entity].append(annotator1)
@@ -98,8 +98,7 @@ def make_entity_item_dict():
                 entity_item_dict[entity].append(item2)
 
             if anchor2 not in check_anchor:
-                if anchor2 != None:
-                   entity_anchor_dict[entity].append(anchor2)
+                entity_anchor_dict[entity].append(anchor2)
 
             if annotator2 not in check_annotator:
                 entity_annotator_dict[entity].append(annotator2)
