@@ -14,7 +14,7 @@ sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
 def item_lifter(external_item):
     sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-        SELECT ?time ?text ?irl ?anchor ?contributor ?annotator ?collection
+        SELECT ?time ?text ?irl ?contributor ?collection
             WHERE
             {
             ?item a nhterm:Item ;
@@ -24,9 +24,6 @@ def item_lifter(external_item):
                 nhterm:hasContributor ?contributor ;
                 nhterm:inCollection ?collection ;
 
-            nhterm:hasAnnotation ?superAnnotation1 .
-            ?superAnnotation1 nhterm:anchorOf ?anchor .
-            ?superAnnotation1 nhterm:hasAnnotator ?annotator .
             FILTER(STR(?item) ="%s")
             }
             LIMIT 1000
@@ -41,15 +38,19 @@ def item_lifter(external_item):
 def make_entity_item_dict():
     sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
-        SELECT DISTINCT ?item1 ?item2 ?entity WHERE {
+        SELECT DISTINCT ?item1 ?item2 ?entity ?anchor1 ?anchor2 ?annotator1 ?annotator2 WHERE {
     
             ?item1 a nhterm:Item ;
             nhterm:hasAnnotation ?superAnnotation1 .
-            ?superAnnotation1 nhterm:hasEntity ?entity . 
+            ?superAnnotation1 nhterm:hasEntity ?entity .
+            ?superAnnotation1 nhterm:anchorOf ?anchor1 .
+            ?superAnnotation1 nhterm:hasAnnotator ?annotator1 . 
     
             ?item2 a nhterm:Item ;
             nhterm:hasAnnotation ?superAnnotation2 .
             ?superAnnotation2 nhterm:hasEntity ?entity . 
+            ?superAnnotation2 nhterm:anchorOf ?anchor2 .
+            ?superAnnotation2 nhterm:hasAnnotator ?annotator2 .
             FILTER(?item1 != ?item2)
         }
         LIMIT 1000
@@ -63,6 +64,7 @@ def make_entity_item_dict():
         item1 = items["item1"]["value"]
         item2 = items["item2"]["value"]
         entity = items["entity"]["value"]
+        print(items["anchor1"]["value"])
 
         if not entity_item_dict.get(entity):
             entity_item_dict[entity] = [item1, item2]
