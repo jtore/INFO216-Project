@@ -3,7 +3,6 @@ from rdflib.namespace import RDF, XSD
 from SPARQLWrapper import SPARQLWrapper, JSON
 import uuid_generator
 
-
 # java -server -Xmx4g -jar blazegraph.jar
 
 
@@ -26,7 +25,6 @@ def item_lifter(external_item):
 
             FILTER(STR(?item) ="%s")
             }
-            LIMIT 1000
             """ % external_item)
     sparql.setReturnFormat(JSON)
 
@@ -39,13 +37,13 @@ def make_entity_item_dict():
     sparql.setQuery("""
     PREFIX nhterm: <https://newshunter.uib.no/term#>
         SELECT DISTINCT ?item1 ?item2 ?entity ?anchor1 ?anchor2 ?annotator1 ?annotator2 WHERE {
-    
+
             ?item1 a nhterm:Item ;
             nhterm:hasAnnotation ?superAnnotation1 .
             ?superAnnotation1 nhterm:hasEntity ?entity .
             ?superAnnotation1 nhterm:anchorOf ?anchor1 .
             ?superAnnotation1 nhterm:hasAnnotator ?annotator1 . 
-    
+
             ?item2 a nhterm:Item ;
             nhterm:hasAnnotation ?superAnnotation2 .
             ?superAnnotation2 nhterm:hasEntity ?entity . 
@@ -53,42 +51,75 @@ def make_entity_item_dict():
             ?superAnnotation2 nhterm:hasAnnotator ?annotator2 .
             FILTER(?item1 != ?item2)
         }
-        LIMIT 1000
     """)
     sparql.setReturnFormat(JSON)
     entity_graph = sparql.query().convert()
 
     entity_item_dict = {}
+    entity_anchor_dict = {}
+    entity_annotator_dict = {}
 
     for items in entity_graph["results"]["bindings"]:
         item1 = items["item1"]["value"]
         item2 = items["item2"]["value"]
         entity = items["entity"]["value"]
-        print(items["anchor1"]["value"])
+        anchor1 = items["anchor1"]["value"]
+        anchor2 = items["anchor2"]["value"]
+        annotator1 = items["annotator1"]["value"]
+        annotator2 = items["annotator2"]["value"]
 
+        # print(anchor1, anchor2, annotator1, annotator2)
+
+        # If entity does not exist as a key in the entity_item_dict
         if not entity_item_dict.get(entity):
+            # Add the current entity as the key, and add the related items as a list of values
             entity_item_dict[entity] = [item1, item2]
+            entity_anchor_dict[entity] = [anchor1, anchor2]
+            entity_annotator_dict[entity] = [annotator1, annotator2]
         else:
+            # If the entity does exist in the entity_item_dict
             set_items = entity_item_dict.get(entity)
+            check_anchor = entity_anchor_dict.get(entity)
+            check_annotator = entity_annotator_dict.get(entity)
+
+            # Append the next item related to the entity into the list of items
             if item1 not in set_items:
                 entity_item_dict[entity].append(item1)
+
+            if anchor1 not in check_anchor:
+                if anchor2 != None:
+                    entity_anchor_dict[entity].append(anchor1)
+
+            if annotator1 not in check_annotator:
+                entity_annotator_dict[entity].append(annotator1)
+
+            # Same as above, but for the second item in the comparison
             if item2 not in set_items:
                 entity_item_dict[entity].append(item2)
 
-    return entity_item_dict
+            if anchor2 not in check_anchor:
+                if anchor2 != None:
+                   entity_anchor_dict[entity].append(anchor2)
+
+            if annotator2 not in check_annotator:
+                entity_annotator_dict[entity].append(annotator2)
+
+    return entity_item_dict, entity_anchor_dict, entity_annotator_dict
+
 
 ###
 
 
 def graph_constructor():
     # For each entity and the list containing items related to that entity
-    for key_entity, item_list_value in make_entity_item_dict().items():
 
-        #print("-- Item --")
+    for key_entity, item_list_value in make_entity_item_dict()[0].items():
+
+        # print("-- Item --")
         # Make a list to store the output from item_lifter when applied to each item related to an entity
         item_list = []
 
-        #print("Key:", key_entity, "value:", item_list_value)
+        # print("Key:", key_entity, "value:", item_list_value)
 
         # For each item in the list of items related to an entity, apply the item_lifter function
         for item in item_list_value:
@@ -96,15 +127,41 @@ def graph_constructor():
             item_list.append(item_output)
 
         # Initialises the lists which are to hold the values related to an entity
-        time_list, irl_list, anchor_list, annotator_list, collection_list, text_list = ([] for i in range(6))
+        time_list, irl_list, collection_list, text_list = ([] for i in range(4))
 
         # Takes the different value properties and adds them in separate lists
         for item in item_list:
             time_list.append(item["time"]["value"])
             irl_list.append(item["irl"]["value"])
-            anchor_list.append(item["anchor"]["value"])
             collection_list.append(item["collection"]["value"])
             text_list.append(item["text"]["value"])
+
+        print(make_entity_item_dict()[1].get(key_entity))
+      #  print("If there is a entity, print it here:", key_entity, item_list_value)
+        the_annotator = make_entity_item_dict()[2].get(key_entity)
+        the_entity = make_entity_item_dict()[1].get(key_entity)
+
+        anchor_list = []
+        if the_entity != None:
+            for i in the_entity:
+                if i in anchor_list:
+                    pass
+                else:
+                    anchor_list.append(i)
+
+        annotator_list = []
+
+        if the_annotator != None:
+            for i in the_annotator:
+                if i in annotator_list:
+                    pass
+                else:
+                    annotator_list.append(i)
+        print("annotator_list", annotator_list)
+
+
+
+
 
         #print(time_list)
         #print(irl_list)
@@ -141,21 +198,22 @@ def graph_constructor():
         for item in item_list_value:
             g.add((Event, nhterm.describedBy, URIRef(item)))
 
-        # nhterm:hasDescriber
-        for annotator in annotator_list:
-            g.add((bn, nhterm.hasDescriber, URIRef(annotator)))
-
         # nhterm:Descriptor
         g.add((Event, nhterm.hasDescriptor, bn2))
         g.add((bn2, RDF.type, nhterm.Descriptor))
 
-        # ntherm:anchorOf
+
+        #ntherm:anchorOf
         for anchor in anchor_list:
             g.add((bn2, nhterm.anchorOf, Literal(anchor, datatype=XSD.string)))
 
         # nhterm:hasDescriber
-        for collec in collection_list:
-            g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
+        for annotator in annotator_list:
+            g.add((bn2, nhterm.hasDescriber, URIRef(annotator)))
+
+        # nhterm:hasDescriber
+        #for collec in collection_list:
+         #   g.add((bn2, nhterm.hasDescriber, URIRef(collec)))
 
         # nhterm:hasEntity
         #g.add((bn2, nhterm.hasEntity, URIRef(entity)))
@@ -172,7 +230,9 @@ def graph_constructor():
         #for text in text_list:
          #   g.add((bn2, nhterm.OriginalText, Literal(text, datatype=XSD.string)))
 
-        #print(g.serialize(format="ttl").decode("utf-8"))
+        print(g.serialize(format="ttl").decode("utf-8"))
+
+
 
 
 if __name__ == '__main__':
