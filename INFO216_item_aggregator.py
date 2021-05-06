@@ -1,27 +1,11 @@
 from rdflib import Graph, Namespace, BNode, URIRef, Literal
-from rdflib.namespace import RDF, RDFS, XSD, FOAF, OWL
-import random
-import string
-from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML, XML
-import re
+from rdflib.namespace import RDF, XSD
+from SPARQLWrapper import SPARQLWrapper, JSON
+import uuid_generator
 
 
 # java -server -Xmx4g -jar blazegraph.jar
 
-
-# Generate a hash to use as a ID for a nhterm:Event
-def uuid_generator():
-    start_sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(8))
-    _2sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
-    _3sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
-    _4sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(4))
-    end_sect = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(12))
-
-    _hash = start_sect + "-" + _2sect + "-" + _3sect + "-" + _4sect + "-" + end_sect
-    return _hash
-
-
-event_hash_value = uuid_generator()
 
 # This creates a server connection to the same URL that contains the graphic interface for Blazegraph.
 sparql = SPARQLWrapper("http://localhost:9999/blazegraph/sparql")
@@ -54,45 +38,47 @@ def item_lifter(external_item):
         return result
 
 
+def make_entity_item_dict():
+    sparql.setQuery("""
+    PREFIX nhterm: <https://newshunter.uib.no/term#>
+        SELECT DISTINCT ?item1 ?item2 ?entity WHERE {
+    
+            ?item1 a nhterm:Item ;
+            nhterm:hasAnnotation ?superAnnotation1 .
+            ?superAnnotation1 nhterm:hasEntity ?entity . 
+    
+            ?item2 a nhterm:Item ;
+            nhterm:hasAnnotation ?superAnnotation2 .
+            ?superAnnotation2 nhterm:hasEntity ?entity . 
+            FILTER(?item1 != ?item2)
+        }
+        LIMIT 1000
+    """)
+    sparql.setReturnFormat(JSON)
+    entity_graph = sparql.query().convert()
 
-sparql.setQuery("""
-PREFIX nhterm: <https://newshunter.uib.no/term#>
-    SELECT DISTINCT ?item1 ?item2 ?entity WHERE {
+    entity_item_dict = {}
 
-        ?item1 a nhterm:Item ;
-        nhterm:hasAnnotation ?superAnnotation1 .
-        ?superAnnotation1 nhterm:hasEntity ?entity . 
+    for items in entity_graph["results"]["bindings"]:
+        item1 = items["item1"]["value"]
+        item2 = items["item2"]["value"]
+        entity = items["entity"]["value"]
 
-        ?item2 a nhterm:Item ;
-        nhterm:hasAnnotation ?superAnnotation2 .
-        ?superAnnotation2 nhterm:hasEntity ?entity . 
-        FILTER(?item1 != ?item2)
-        
-    }
+        if not entity_item_dict.get(entity):
+            entity_item_dict[entity] = [item1, item2]
+        else:
+            set_items = entity_item_dict.get(entity)
+            if item1 not in set_items:
+                entity_item_dict[entity].append(item1)
+            if item2 not in set_items:
+                entity_item_dict[entity].append(item2)
 
-    LIMIT 1000
-""")
-sparql.setReturnFormat(JSON)
-entity_graph = sparql.query().convert()
+    return entity_item_dict
 
-entity_item_dict = {}
-item_list = []
+###
 
-for items in entity_graph["results"]["bindings"]:
-    item1 = items["item1"]["value"]
-    item2 = items["item2"]["value"]
-    entity = items["entity"]["value"]
 
-    if not entity_item_dict.get(entity):
-        entity_item_dict[entity] = [item1, item2]
-    else:
-        set_items = entity_item_dict.get(entity)
-        if item1 not in set_items:
-            entity_item_dict[entity].append(item1)
-        if item2 not in set_items:
-            entity_item_dict[entity].append(item2)
-
-for key_entity, item_list_value in entity_item_dict.items():
+for key_entity, item_list_value in make_entity_item_dict().items():
     print("-- Item --")
 
     item_list = []
@@ -134,6 +120,8 @@ for key_entity, item_list_value in entity_item_dict.items():
     # Blank nodes
     bn = BNode()
     bn2 = BNode()
+
+    event_hash_value = uuid_generator.generate_uuid()
 
     Event = URIRef("https://newshunter.uib.no/resource#" + event_hash_value)
 
